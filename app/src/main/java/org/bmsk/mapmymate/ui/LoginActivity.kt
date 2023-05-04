@@ -11,6 +11,7 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.kakao.sdk.auth.AuthApiClient
 import com.kakao.sdk.auth.model.OAuthToken
 import com.kakao.sdk.common.KakaoSdk
 import com.kakao.sdk.common.model.ClientError
@@ -43,6 +44,14 @@ class LoginActivity : AppCompatActivity() {
         val keyHash = Utility.getKeyHash(this)
         Log.d("LoginActivity", keyHash)
         KakaoSdk.init(this, getString(R.string.kakao_native_app_key))
+
+        if(AuthApiClient.instance.hasToken()) {
+            UserApiClient.instance.accessTokenInfo { tokenInfo, error ->
+                if(error == null) {
+                    getKakaoAccountInfo()
+                }
+            }
+        }
 
         emailLoginResult =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -129,8 +138,6 @@ class LoginActivity : AppCompatActivity() {
         Firebase.auth.createUserWithEmailAndPassword(email, uId).addOnCompleteListener {
             if (it.isSuccessful) {
                 updateFirebaseDatabase(user)
-            } else {
-                showErrorToast()
             }
         }.addOnFailureListener {
             // 실패했는데 이미 가입된 계정
