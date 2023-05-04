@@ -3,6 +3,8 @@
 MapMyMates: 내 친구들의 지도 - GoogleMap, GPS(FusedLocationClient), Kakao Auth SDK, Firebase Realtiem
 Database, Firebase Auth, Glide, Lottie Animation, View Animation
 
+![](README_images/sequence.png)
+
 ## 1. Google Map
 
 https://developers.google.com/maps/documentation/android-sdk/overview?hl=ko
