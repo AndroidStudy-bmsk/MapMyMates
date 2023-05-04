@@ -54,6 +54,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerC
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var trackingPersonId: String = ""
 
+    private val locationRequest = LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 5000)
+        .build()
     private val markerMap = hashMapOf<String, Marker>()
     private val locationPermissionRequest = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -109,8 +111,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerC
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        setupEmojoiAnimationView()
-
+        setupEmojiAnimationView()
+        setupCurrentLocationButton()
         requestLocationPermission()
         setupFirebaseDatabase()
     }
@@ -140,9 +142,6 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerC
     }
 
     private fun getCurrentLocation() {
-        val locationRequest = LocationRequest.Builder(PRIORITY_HIGH_ACCURACY, 5000)
-            .build()
-
         if (ActivityCompat.checkSelfPermission(
                 this,
                 ACCESS_FINE_LOCATION
@@ -160,11 +159,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerC
             locationCallback,
             Looper.getMainLooper()
         )
-        fusedLocationClient.lastLocation.addOnSuccessListener {
-            googleMap.animateCamera(
-                CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 15.0f)
-            )
-        }
+
+        moveToLastLocation()
     }
 
     private fun requestLocationPermission() {
@@ -173,7 +169,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerC
         )
     }
 
-    private fun setupEmojoiAnimationView() {
+    private fun setupEmojiAnimationView() {
         binding.emojiLottieAnimationView.setOnClickListener {
             val lastEmoji = mutableMapOf<String, Any>()
             lastEmoji["type"] = "emoji_1"
@@ -200,6 +196,37 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerC
 
         binding.emojiLottieAnimationView.speed = 3f
         binding.centerLottieAnimationView.speed = 3f
+    }
+
+    private fun setupCurrentLocationButton() {
+        binding.currentLocationButton.setOnClickListener {
+            moveToLastLocation()
+        }
+    }
+
+    private fun moveToLastLocation() {
+        if (ActivityCompat.checkSelfPermission(
+                this,
+                ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                this,
+                ACCESS_COARSE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestLocationPermission()
+            return
+        }
+        // 권한이 있는 상태
+        fusedLocationClient.requestLocationUpdates(
+            locationRequest,
+            locationCallback,
+            Looper.getMainLooper()
+        )
+        fusedLocationClient.lastLocation.addOnSuccessListener {
+            googleMap.animateCamera(
+                CameraUpdateFactory.newLatLngZoom(LatLng(it.latitude, it.longitude), 15.0f)
+            )
+        }
     }
 
     private fun setupFirebaseDatabase() {
@@ -250,8 +277,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerC
 
         Firebase.database.reference.child(getString(R.string.db_path_emoji))
             .child(Firebase.auth.currentUser?.uid ?: "")
-            .addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
+            .addChildEventListener(object : ChildEventListener {
+                override fun onChildChanged(snapshot: DataSnapshot, previousChildName: String?) {
                     binding.centerLottieAnimationView.visibility = VISIBLE
                     binding.centerLottieAnimationView.playAnimation()
                     binding.centerLottieAnimationView.animate()
@@ -266,10 +293,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, GoogleMap.OnMarkerC
                         .start()
                 }
 
-                override fun onCancelled(error: DatabaseError) {
-                    // TODO("Not yet implemented")
-                }
-
+                override fun onChildAdded(snapshot: DataSnapshot, previousChildName: String?) {}
+                override fun onChildRemoved(snapshot: DataSnapshot) {}
+                override fun onChildMoved(snapshot: DataSnapshot, previousChildName: String?) {}
+                override fun onCancelled(error: DatabaseError) {}
             })
     }
 
