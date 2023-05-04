@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">MapMyMate</string>
     <string name="kakao_login_button">카카오 로그인</string>
+    <string name="do_login">로그인</string>
+    <string name="do_input_email">이메일을 입력해주세요.</string>
+    <string name="fail_user_login">사용자 로그인에 실패했습니다.</string>
 </resources>
