@@ -5,4 +5,5 @@
     <string name="do_input_email">이메일을 입력해주세요.</string>
     <string name="fail_user_login">사용자 로그인에 실패했습니다.</string>
     <string name="db_path_person">Person</string>
+    <string name="db_path_emoji">Emoji</string>
 </resources>

@@ -69,11 +69,14 @@ private fun stopLocationUpdates() {
 #### **업데이트 간격**을 설정해야 하는 이유
 
 1. **배터리 소모 최소화**: 위치 정보를 너무 자주 요청하면 스마트폰의 배터리 소모가 빠르게 진행된다. 업데이트 간격을 적절하게 설정하여 배터리 사용을 최적화해야 한다.
-2. **정확도와 응답 시간의 균형**: 위치 정보의 정확도와 응답 시간은 서로 상충하는 관계가 있다. 위치 업데이트 간격을 늘리면 정확도는 떨어지지만 응답 시간이 빨라지며, 간격을
+2. **정확도와 응답 시간의 균형**: 위치 정보의 정확도와 응답 시간은 서로 상충하는 관계가 있다. 위치 업데이트 간격을 늘리면 정확도는 떨어지지만 응답 시간이 빨라지며,
+   간격을
    줄이면 정확도는 높아지지만 응답 시간이 느려진다. 이러한 trade-off를 고려하여 애플리케이션의 요구 사항에 맞는 적절한 업데이트 간격을 설정해야 한다.
-3. **네트워크 트래픽 관리**: 위치 정보를 너무 자주 요청하면 네트워크 트래픽이 증가하고, 서버에 부담을 줄 수 있다. 업데이트 간격을 조절하여 네트워크 트래픽을 최소화해야 할
+3. **네트워크 트래픽 관리**: 위치 정보를 너무 자주 요청하면 네트워크 트래픽이 증가하고, 서버에 부담을 줄 수 있다. 업데이트 간격을 조절하여 네트워크 트래픽을 최소화해야
+   할
    것이다.
-4. **사용자 경험 개선**: 애플리케이션의 사용 목적에 따라 위치 정보 업데이트 간격이 다를 수 있다. 예를 들어, 걷기와 관련된 애플리케이션은 위치 정보를 자주 업데이트해야 정확한
+4. **사용자 경험 개선**: 애플리케이션의 사용 목적에 따라 위치 정보 업데이트 간격이 다를 수 있다. 예를 들어, 걷기와 관련된 애플리케이션은 위치 정보를 자주 업데이트해야
+   정확한
    정보를 제공할 수 있지만, 일반적인 날씨 애플리케이션은 그렇게 자주 업데이트할 필요가 없을 것이다. 사용자 경험을 개선하려면 애플리케이션의 사용 목적에 맞는 업데이트 간격을
    설정해야 한다.
 
@@ -101,6 +104,57 @@ OAuth(Open Authorization)는 인터넷 사용자들이 웹 사이트나 애플�
 ## 5. Firebase Auth
 
 ## 6. Glide
+
+- Glide를 사용하여 프로필 사진을 마커에 넣어주도록 한다.
+- 이 때, `ImageView`에 넣어주는 것이 아니기 때문에 `wrap_content`속성이나 `fitScale`속성 같은 것을 사용할 수 없다.
+
+```kotlin
+Glide.with(this).asBitmap()
+    .load(person.profilePhoto) // 여기까지 도달했을 때 이미지의 크기는 아직 모른다.
+    .transform(RoundedCorners(60))
+    .override(180) // 180 size로 오버라이드해서 캐싱할 수 있다.
+    .listener(object : RequestListener<Bitmap> {
+        override fun onLoadFailed(
+            e: GlideException?,
+            model: Any?,
+            target: Target<Bitmap>?,
+            isFirstResource: Boolean
+        ): Boolean {
+            return false
+        }
+
+        override fun onResourceReady(
+            resource: Bitmap?,
+            model: Any?,
+            target: Target<Bitmap>?,
+            dataSource: DataSource?,
+            isFirstResource: Boolean
+        ): Boolean {
+            resource?.let {
+                runOnUiThread {
+                    marker.setIcon(
+                        BitmapDescriptorFactory.fromBitmap(
+                            it
+                        )
+                    )
+                }
+            }
+            return true
+        }
+    }).submit()
+```
+
+![](.README_images/onLoadFailed.png)
+
+- `onLoadFailed`의 리턴 값 지정
+- `true`를 반환하게 되면 `target`에서 `onLoadFailed`가 호출되지 않도록 한다.
+- `false`를 반환하게 되면 `target`의 `onLoadFailed`가 호출되도록 한다. (allow)
+
+![](.README_images/onResourceReady.png)
+
+- `onResourceReady`의 리턴 값 지정
+- `true`를 반환할 경우 `target`에서 `onResourceReady`가 호출되지 않도록 한다.
+- `false`를 반환하게 되면 `target`의 `onResourceReady`가 호출되도록 한다. (allow)
 
 ## 7. Lottie Animation
 
